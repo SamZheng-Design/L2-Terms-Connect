@@ -21,6 +21,9 @@ export const renderer = jsxRenderer(({ children }) => {
         {/* FontAwesome */}
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
 
+        {/* QR Code Generator */}
+        <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+
         {/* Design System CSS */}
         <link href="/static/style.css" rel="stylesheet" />
       </head>

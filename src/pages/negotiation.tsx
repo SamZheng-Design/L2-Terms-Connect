@@ -120,6 +120,81 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           <i class="fas fa-times"></i>
           {t(TEXT.actions.reject, lang)}
         </button>
+        <button class="btn btn-ghost" onclick="openInviteModal()" style="margin-left:auto">
+          <i class="fas fa-user-plus"></i>
+          {lang === 'zh' ? '邀请协商方' : 'Invite'}
+        </button>
+      </div>
+
+      {/* ── Invite Share Modal ──────────────────────────────────── */}
+      <div id="inviteModal" class="invite-modal-overlay" style="display:none">
+        <div class="invite-modal">
+          <div class="invite-modal-header">
+            <h3><i class="fas fa-share-alt" style="margin-right:8px;color:var(--terms-dark)"></i>{lang === 'zh' ? '邀请协商方' : 'Invite to Negotiate'}</h3>
+            <button onclick="closeInviteModal()" class="invite-modal-close"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="invite-modal-body">
+            {/* Step 1: Options */}
+            <div id="invStepOptions">
+              <p class="invite-modal-desc">
+                {lang === 'zh'
+                  ? '生成邀请链接或二维码，分享给其他协商方，对方扫码或点击链接即可加入本次协商。'
+                  : 'Generate an invite link or QR code to share with others.'}
+              </p>
+              <div class="invite-form-field">
+                <label class="auth-label">{lang === 'zh' ? '您的名字（显示给被邀请方）' : 'Your name (shown to invitee)'}</label>
+                <input type="text" id="inviterNameInput" class="auth-input" placeholder={lang === 'zh' ? '请输入您的名字' : 'Enter your name'} />
+              </div>
+              <div class="invite-form-field">
+                <label class="auth-label">{lang === 'zh' ? '邀请角色' : 'Invitee Role'}</label>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="invite-role-btn invite-role-active" id="roleNegotiator" onclick="selectInviteRole('negotiator')">
+                    <i class="fas fa-handshake"></i> {lang === 'zh' ? '协商方' : 'Negotiator'}
+                  </button>
+                  <button type="button" class="invite-role-btn" id="roleObserver" onclick="selectInviteRole('observer')">
+                    <i class="fas fa-eye"></i> {lang === 'zh' ? '观察者' : 'Observer'}
+                  </button>
+                </div>
+              </div>
+              <div class="invite-form-field">
+                <label class="auth-label">{lang === 'zh' ? '附言（可选）' : 'Message (optional)'}</label>
+                <textarea id="inviteMessage" class="auth-input" rows={2} placeholder={lang === 'zh' ? '例如：请审阅这份收入分成方案' : 'e.g., Please review this proposal'} style="resize:none"></textarea>
+              </div>
+              <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="generateInvite()" id="genInviteBtn">
+                <i class="fas fa-qrcode"></i> {lang === 'zh' ? '生成邀请链接 & 二维码' : 'Generate Invite & QR'}
+              </button>
+            </div>
+
+            {/* Step 2: QR + Link (hidden initially) */}
+            <div id="invStepResult" style="display:none">
+              <div class="invite-qr-section">
+                <div id="qrCodeContainer" class="invite-qr-box"></div>
+                <p class="invite-qr-hint">{lang === 'zh' ? '扫描二维码加入协商' : 'Scan QR to join'}</p>
+              </div>
+              <div class="invite-link-section">
+                <label class="auth-label">{lang === 'zh' ? '邀请链接' : 'Invite Link'}</label>
+                <div class="invite-link-row">
+                  <input type="text" id="inviteLinkInput" class="auth-input" readonly style="font-size:13px" />
+                  <button class="btn btn-secondary invite-copy-btn" onclick="copyInviteLink()">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="invite-info-row">
+                <span><i class="fas fa-clock" style="color:var(--text-placeholder)"></i> {lang === 'zh' ? '有效期 7 天' : '7 days'}</span>
+                <span><i class="fas fa-users" style="color:var(--text-placeholder)"></i> {lang === 'zh' ? '最多 10 人' : 'Max 10'}</span>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:16px">
+                <button class="btn btn-ghost" style="flex:1" onclick="resetInviteModal()">
+                  <i class="fas fa-redo"></i> {lang === 'zh' ? '重新生成' : 'New'}
+                </button>
+                <button class="btn btn-primary" style="flex:1" onclick="closeInviteModal()">
+                  <i class="fas fa-check"></i> {lang === 'zh' ? '完成' : 'Done'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Timeline ───────────────────────────────────────── */}
@@ -597,6 +672,103 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           initSliders();
           renderLocalProposals();
           renderComparison();
+          // Pre-fill inviter name from logged-in user
+          try {
+            var user = JSON.parse(localStorage.getItem('tc_user'));
+            if (user && user.displayName) {
+              var inp = document.getElementById('inviterNameInput');
+              if (inp) inp.value = user.displayName;
+            }
+          } catch(e) {}
+        }
+
+        // ── Invite Modal ───────────────────────────────────────
+        var inviteRole = 'negotiator';
+
+        function openInviteModal() {
+          document.getElementById('inviteModal').style.display = '';
+          document.body.style.overflow = 'hidden';
+        }
+        function closeInviteModal() {
+          var modal = document.getElementById('inviteModal');
+          modal.style.opacity = '0';
+          setTimeout(function() {
+            modal.style.display = 'none';
+            modal.style.opacity = '';
+            document.body.style.overflow = '';
+          }, 250);
+        }
+        function selectInviteRole(role) {
+          inviteRole = role;
+          document.getElementById('roleNegotiator').className =
+            role === 'negotiator' ? 'invite-role-btn invite-role-active' : 'invite-role-btn';
+          document.getElementById('roleObserver').className =
+            role === 'observer' ? 'invite-role-btn invite-role-active' : 'invite-role-btn';
+        }
+        function resetInviteModal() {
+          document.getElementById('invStepOptions').style.display = '';
+          document.getElementById('invStepResult').style.display = 'none';
+          document.getElementById('qrCodeContainer').innerHTML = '';
+        }
+
+        async function generateInvite() {
+          var btn = document.getElementById('genInviteBtn');
+          var inviterName = document.getElementById('inviterNameInput').value.trim() || (LANG==='zh'?'匿名用户':'Anonymous');
+          var message = document.getElementById('inviteMessage').value.trim();
+          btn.classList.add('btn-loading'); btn.disabled = true;
+          try {
+            var res = await fetch('/api/invite/create', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                negotiationId: NEGOTIATION_ID,
+                inviterName: inviterName,
+                role: inviteRole,
+                message: message
+              })
+            });
+            var data = await res.json();
+            if (data.success) {
+              var fullUrl = window.location.origin + data.invite.inviteUrl;
+              document.getElementById('inviteLinkInput').value = fullUrl;
+
+              // Generate QR code
+              var qr = qrcode(0, 'M');
+              qr.addData(fullUrl);
+              qr.make();
+              var container = document.getElementById('qrCodeContainer');
+              container.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
+              // Style the SVG
+              var svg = container.querySelector('svg');
+              if (svg) {
+                svg.style.width = '100%';
+                svg.style.height = '100%';
+                svg.style.maxWidth = '200px';
+                svg.style.maxHeight = '200px';
+              }
+
+              document.getElementById('invStepOptions').style.display = 'none';
+              document.getElementById('invStepResult').style.display = '';
+              showToast(LANG==='zh'?'邀请链接已生成':'Invite link generated', 'success');
+            } else {
+              showToast(data.message || (LANG==='zh'?'生成失败':'Failed'), 'error');
+            }
+          } catch(e) {
+            showToast(LANG==='zh'?'网络错误':'Network error', 'error');
+          } finally { btn.classList.remove('btn-loading'); btn.disabled = false; }
+        }
+
+        function copyInviteLink() {
+          var input = document.getElementById('inviteLinkInput');
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(input.value).then(function() {
+              showToast(LANG==='zh'?'链接已复制到剪贴板':'Link copied!', 'success');
+            });
+          } else {
+            input.select();
+            document.execCommand('copy');
+            showToast(LANG==='zh'?'链接已复制':'Link copied!', 'success');
+          }
         }
 
         document.addEventListener('DOMContentLoaded', initPage);

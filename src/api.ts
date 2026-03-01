@@ -153,6 +153,100 @@ apiRoutes.post('/terms/initiate', async (c) => {
   })
 })
 
+// ══════════ Invite API ═══════════════════════════════════════
+
+// In-memory invite store (production: use D1/KV)
+const inviteStore = new Map<string, any>()
+
+// Create invite link
+apiRoutes.post('/invite/create', async (c) => {
+  const { negotiationId, inviterName, role, message } = await c.req.json()
+  
+  if (!negotiationId) {
+    return c.json({ success: false, message: '缺少协商ID' }, 400)
+  }
+  
+  // Find the negotiation
+  const neg = mockNegotiations.find(n => n.id === negotiationId)
+  if (!neg) return c.json({ success: false, message: '协商不存在' }, 404)
+  
+  const token = 'inv_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 8)
+  const invite = {
+    token,
+    negotiationId,
+    projectName: neg.projectName,
+    industry: neg.industry,
+    inviterName: inviterName || '匿名用户',
+    role: role || 'observer', // observer | negotiator
+    message: message || '',
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 7 * 24 * 3600000).toISOString(), // 7 days
+    usedCount: 0,
+    maxUses: 10,
+    status: 'active'
+  }
+  
+  inviteStore.set(token, invite)
+  
+  return c.json({
+    success: true,
+    invite: {
+      token,
+      negotiationId,
+      projectName: neg.projectName,
+      expiresAt: invite.expiresAt,
+      inviteUrl: `/invite/${token}`
+    }
+  })
+})
+
+// Validate invite token
+apiRoutes.get('/invite/:token', (c) => {
+  const token = c.req.param('token')
+  const invite = inviteStore.get(token)
+  
+  if (!invite) return c.json({ success: false, message: '邀请链接无效' }, 404)
+  if (new Date(invite.expiresAt) < new Date()) {
+    return c.json({ success: false, message: '邀请链接已过期' }, 410)
+  }
+  if (invite.usedCount >= invite.maxUses) {
+    return c.json({ success: false, message: '邀请链接已达使用上限' }, 410)
+  }
+  
+  return c.json({
+    success: true,
+    invite: {
+      token: invite.token,
+      negotiationId: invite.negotiationId,
+      projectName: invite.projectName,
+      industry: invite.industry,
+      inviterName: invite.inviterName,
+      role: invite.role,
+      message: invite.message,
+      expiresAt: invite.expiresAt
+    }
+  })
+})
+
+// Accept invite (join negotiation)
+apiRoutes.post('/invite/:token/accept', async (c) => {
+  const token = c.req.param('token')
+  const invite = inviteStore.get(token)
+  
+  if (!invite) return c.json({ success: false, message: '邀请链接无效' }, 404)
+  if (new Date(invite.expiresAt) < new Date()) {
+    return c.json({ success: false, message: '邀请链接已过期' }, 410)
+  }
+  
+  invite.usedCount++
+  
+  return c.json({
+    success: true,
+    message: '已加入协商',
+    redirectUrl: `/negotiation/${invite.negotiationId}`
+  })
+})
+
 // ══════════ Auth API (V33 style) ══════════════════════════════
 
 // In-memory user/session store (production: use D1/KV)

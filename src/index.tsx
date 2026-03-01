@@ -6,6 +6,7 @@ import { HomePage } from './pages/home'
 import { NegotiationPage } from './pages/negotiation'
 import { CalculatorPage } from './pages/calculator'
 import { LoginPage } from './pages/login'
+import { InvitePage } from './pages/invite'
 import { apiRoutes } from './api'
 
 const app = new Hono()
@@ -17,6 +18,19 @@ app.get('/login', (c) => {
   const lang = (c.req.query('lang') || 'zh') as 'zh' | 'en'
   return c.render(
     <LoginPage lang={lang} />
+  )
+})
+
+// ── Invite Landing Page ─────────────────────────────────────
+app.get('/invite/:token', (c) => {
+  const token = c.req.param('token')
+  const lang = (c.req.query('lang') || 'zh') as 'zh' | 'en'
+  return c.render(
+    <div>
+      <Navbar lang={lang} current="invite" />
+      <InvitePage lang={lang} token={token} />
+      <Footer lang={lang} />
+    </div>
   )
 })
 
