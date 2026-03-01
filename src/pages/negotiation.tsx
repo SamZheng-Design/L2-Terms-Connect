@@ -22,6 +22,9 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
     return c.industry === (indMap[neg.industry] || neg.industry)
   })
 
+  // Serialize proposals for JS usage
+  const proposalsJson = JSON.stringify(proposals)
+
   return (
     <main style="max-width:1000px;margin:0 auto;padding:0 24px;padding-top:80px">
       {/* Breadcrumb */}
@@ -43,7 +46,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
             {t(TEXT.workspace.borrower, lang)}
           </button>
         </div>
-        <span class={`badge badge-${neg.status}`}>
+        <span class={`badge badge-${neg.status}`} id="statusBadge">
           {status.icon} {statusLabel}
         </span>
       </div>
@@ -100,7 +103,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
       </div>
 
       {/* ── Action Buttons ─────────────────────────────────── */}
-      <div class="reveal" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px">
+      <div class="reveal" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px" id="actionButtons">
         <button class="btn btn-secondary" onclick="saveToComparison()">
           <i class="fas fa-save"></i>
           {t(TEXT.actions.savePlan, lang)}
@@ -126,6 +129,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           {t(TEXT.timeline.title, lang)}
         </h3>
         <div class="timeline" id="timeline-container">
+          {/* Server-rendered initial proposals */}
           {proposals.map((p, idx) => {
             const roundNum = proposals.length - idx
             const roleLabel = p.proposedBy === 'investor'
@@ -168,7 +172,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           </h3>
           <div style="display:flex;flex-direction:column;gap:12px">
             {industryCases.map((c) => (
-              <div style="display:flex;align-items:center;gap:16px;padding:14px 18px;background:var(--surface-page);border-radius:var(--radius-md);font-size:14px">
+              <div style="display:flex;align-items:center;gap:16px;padding:14px 18px;background:var(--surface-page);border-radius:var(--radius-md);font-size:14px;flex-wrap:wrap">
                 <span style="font-weight:600;color:var(--text-primary);min-width:50px">{c.industry}</span>
                 <span style="color:var(--text-secondary)">¥{c.amount}{lang === 'zh' ? '万' : '0K'}</span>
                 <span style="color:var(--text-secondary)">{c.ratio}%</span>
@@ -186,6 +190,10 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
         var LANG = '${lang}';
         var NEGOTIATION_ID = '${negotiationId}';
         var currentPerspective = 'investor';
+        var STORAGE_KEY = 'termsconnect_' + NEGOTIATION_ID;
+        var COMPARE_KEY = 'termsconnect_compare_' + NEGOTIATION_ID;
+        var STATUS_KEY = 'termsconnect_status_' + NEGOTIATION_ID;
+        var PROPOSALS_KEY = 'termsconnect_proposals_' + NEGOTIATION_ID;
 
         // Initialize slider config from server data
         window.sliderConfig = {
@@ -203,6 +211,91 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           linkedMode: true
         };
 
+        // ── localStorage helpers ──────────────────────────────
+        function lsGet(key, fallback) {
+          try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+          catch(e) { return fallback; }
+        }
+        function lsSet(key, val) {
+          try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+        }
+
+        // ── Load persisted state ──────────────────────────────
+        var serverProposals = ${proposalsJson};
+        var localProposals = lsGet(PROPOSALS_KEY, []);
+        var localStatus = lsGet(STATUS_KEY, '${neg.status}');
+        window.comparisonPlans = lsGet(COMPARE_KEY, []);
+        window.proposalCount = serverProposals.length + localProposals.length;
+
+        // ── Restore persisted status ──────────────────────────
+        function updateStatusUI(newStatus) {
+          var badge = document.getElementById('statusBadge');
+          if (!badge) return;
+          var cfg = {
+            negotiating: { icon: '⏳', label: LANG==='zh'?'协商中':'Negotiating', cls: 'badge-negotiating' },
+            agreed:      { icon: '✓',  label: LANG==='zh'?'已达成':'Agreed',      cls: 'badge-agreed' },
+            rejected:    { icon: '✕',  label: LANG==='zh'?'已拒绝':'Rejected',    cls: 'badge-rejected' }
+          };
+          var s = cfg[newStatus] || cfg.negotiating;
+          badge.className = 'badge ' + s.cls;
+          badge.textContent = s.icon + ' ' + s.label;
+
+          // Disable action buttons if finalized
+          if (newStatus === 'agreed' || newStatus === 'rejected') {
+            var btns = document.querySelectorAll('#actionButtons .btn-primary, #actionButtons .btn-success, #actionButtons .btn-danger');
+            btns.forEach(function(b) {
+              b.disabled = true;
+              b.style.opacity = '0.5';
+              b.style.pointerEvents = 'none';
+            });
+          }
+        }
+
+        if (localStatus !== '${neg.status}') {
+          updateStatusUI(localStatus);
+        }
+
+        // ── Render local proposals into timeline ──────────────
+        function renderLocalProposals() {
+          if (localProposals.length === 0) return;
+          var container = document.getElementById('timeline-container');
+          if (!container) return;
+
+          // Prepend local proposals (newest first) before existing items
+          var fragment = '';
+          localProposals.slice().reverse().forEach(function(p, idx) {
+            var roundNum = serverProposals.length + localProposals.length - idx;
+            var roleLabel = p.proposedBy === 'investor'
+              ? (LANG === 'zh' ? '投资方' : 'Investor')
+              : (LANG === 'zh' ? '融资方' : 'Borrower');
+            var timeStr = p.createdAt.replace('T', ' ').slice(0, 16);
+            var unit = LANG === 'zh' ? '万' : '0K';
+            var moUnit = LANG === 'zh' ? '月' : 'Mo';
+            var roundPre = LANG === 'zh' ? '第' : 'Round ';
+            var roundSuf = LANG === 'zh' ? '轮' : '';
+
+            fragment += '<div class="timeline-item">'
+              + '<div class="timeline-dot" style="background:var(--terms-dark);border-color:var(--terms-dark)"></div>'
+              + '<div class="timeline-content" style="border:1.5px solid rgba(139,92,246,0.15)">'
+              + '<div class="timeline-header">'
+              + '<span class="timeline-round">📌 ' + roundPre + roundNum + roundSuf + '</span>'
+              + '<span class="timeline-role">· ' + roleLabel + '</span>'
+              + '<span class="timeline-time">' + timeStr + '</span>'
+              + '<span style="margin-left:8px;font-size:10px;padding:2px 6px;border-radius:999px;background:var(--terms-light);color:var(--terms-dark)">NEW</span>'
+              + '</div>'
+              + '<div class="timeline-data">'
+              + '<span>¥' + p.financingAmount + unit + '</span>'
+              + '<span>' + p.revenueShareRatio + '%</span>'
+              + '<span>' + p.cooperationTerm + moUnit + '</span>'
+              + '<span>IRR ' + p.irr + '%</span>'
+              + '</div>'
+              + (p.note ? '<div class="timeline-note">"' + p.note + '"</div>' : '')
+              + '</div></div>';
+          });
+
+          container.insertAdjacentHTML('afterbegin', fragment);
+        }
+
         // ── Perspective Switch ────────────────────────────────
         function switchPerspective(role) {
           currentPerspective = role;
@@ -218,25 +311,93 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           );
         }
 
-        // ── Action Handlers ───────────────────────────────────
+        // ── Action Handlers with localStorage ─────────────────
         function submitProposal() {
+          if (localStatus !== 'negotiating' && localStatus !== '${neg.status}') {
+            showToast(LANG === 'zh' ? '协商已结束，无法提交' : 'Negotiation closed', 'error');
+            return;
+          }
           var note = document.getElementById('negotiationNote').value || '';
           var cv = window.currentValues;
-          showToast(LANG === 'zh' ? '新方案已提交（Demo）' : 'Proposal submitted (Demo)', 'info');
+          var cfg = window.sliderConfig;
+
+          // Calculate metrics
+          var ratio = cv.revenueShareRatio / 100;
+          var totalRepayment = ratio * cfg.pcf * cv.cooperationTerm;
+          var monthlyRepayment = ratio * cfg.pcf;
+          var paybackMonths = monthlyRepayment > 0 ? Math.ceil(cv.financingAmount / monthlyRepayment) : 0;
+          var recoveryMultiple = cv.financingAmount > 0 ? totalRepayment / cv.financingAmount : 0;
+          var irr = 0;
+          if (cv.financingAmount > 0 && cv.cooperationTerm > 0) {
+            irr = (Math.pow(totalRepayment / cv.financingAmount, 12 / cv.cooperationTerm) - 1) * 100;
+          }
+
+          var proposal = {
+            id: 'tp-local-' + Date.now(),
+            proposedBy: currentPerspective,
+            financingAmount: cv.financingAmount,
+            revenueShareRatio: cv.revenueShareRatio,
+            cooperationTerm: cv.cooperationTerm,
+            irr: irr.toFixed(1),
+            note: note,
+            createdAt: new Date().toISOString()
+          };
+
+          localProposals.push(proposal);
+          lsSet(PROPOSALS_KEY, localProposals);
+          window.proposalCount++;
+
+          // Add to timeline dynamically
+          var container = document.getElementById('timeline-container');
+          var roundNum = window.proposalCount;
+          var roleLabel = currentPerspective === 'investor'
+            ? (LANG === 'zh' ? '投资方' : 'Investor')
+            : (LANG === 'zh' ? '融资方' : 'Borrower');
+          var timeStr = proposal.createdAt.replace('T', ' ').slice(0, 16);
+          var unit = LANG === 'zh' ? '万' : '0K';
+          var moUnit = LANG === 'zh' ? '月' : 'Mo';
+          var roundPre = LANG === 'zh' ? '第' : 'Round ';
+          var roundSuf = LANG === 'zh' ? '轮' : '';
+
+          var html = '<div class="timeline-item" style="animation:fadeInUp 0.4s ease">'
+            + '<div class="timeline-dot" style="background:var(--terms-dark);border-color:var(--terms-dark)"></div>'
+            + '<div class="timeline-content" style="border:1.5px solid rgba(139,92,246,0.15)">'
+            + '<div class="timeline-header">'
+            + '<span class="timeline-round">📌 ' + roundPre + roundNum + roundSuf + '</span>'
+            + '<span class="timeline-role">· ' + roleLabel + '</span>'
+            + '<span class="timeline-time">' + timeStr + '</span>'
+            + '<span style="margin-left:8px;font-size:10px;padding:2px 6px;border-radius:999px;background:var(--terms-light);color:var(--terms-dark)">NEW</span>'
+            + '</div>'
+            + '<div class="timeline-data">'
+            + '<span>¥' + proposal.financingAmount + unit + '</span>'
+            + '<span>' + proposal.revenueShareRatio + '%</span>'
+            + '<span>' + proposal.cooperationTerm + moUnit + '</span>'
+            + '<span>IRR ' + proposal.irr + '%</span>'
+            + '</div>'
+            + (proposal.note ? '<div class="timeline-note">"' + proposal.note + '"</div>' : '')
+            + '</div></div>';
+
+          container.insertAdjacentHTML('afterbegin', html);
           document.getElementById('negotiationNote').value = '';
+          showToast(LANG === 'zh' ? '新方案已提交（第' + roundNum + '轮）' : 'Proposal submitted (Round ' + roundNum + ')', 'info');
         }
 
         function acceptTerms() {
+          localStatus = 'agreed';
+          lsSet(STATUS_KEY, 'agreed');
+          updateStatusUI('agreed');
           showToast(LANG === 'zh' ? '条款已达成（Demo）' : 'Terms Agreed (Demo)', 'success');
         }
 
         function rejectTerms() {
+          localStatus = 'rejected';
+          lsSet(STATUS_KEY, 'rejected');
+          updateStatusUI('rejected');
           showToast(LANG === 'zh' ? '条款已拒绝' : 'Terms Rejected', 'error');
         }
 
-        // ── Slider Engine (same as calculator) ────────────────
+        // ── Slider Engine ─────────────────────────────────────
         var isDragging = null;
-        window.comparisonPlans = [];
 
         function initSliders() {
           var sliders = ['amount', 'ratio', 'term'];
@@ -348,6 +509,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           }
         }
 
+        // ── Comparison with localStorage ──────────────────────
         function saveToComparison() {
           var cfg = window.sliderConfig;
           var cv = window.currentValues;
@@ -369,12 +531,14 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
             payback: paybackMonths,
             multiple: recoveryMultiple.toFixed(2)
           });
+          lsSet(COMPARE_KEY, window.comparisonPlans);
           renderComparison();
           showToast(LANG === 'zh' ? '方案已保存到对比' : 'Plan saved to comparison', 'info');
         }
 
         function clearComparison() {
           window.comparisonPlans = [];
+          lsSet(COMPARE_KEY, []);
           renderComparison();
         }
 
@@ -384,7 +548,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           var plans = window.comparisonPlans;
           if (plans.length === 0) {
             container.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-placeholder);padding:24px">' +
-              (LANG === 'zh' ? '暂无对比方案' : 'No plans yet') + '</td></tr>';
+              (LANG === 'zh' ? '暂无对比方案，点击"保存方案"添加' : 'No plans yet. Click "Save Plan" to add.') + '</td></tr>';
             return;
           }
           var rows = [
@@ -429,16 +593,16 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
         }
 
         // ── Init ──────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', function() {
+        function initPage() {
           initSliders();
-        });
-
-        // Fallback: init immediately if DOM already loaded
-        if (document.readyState !== 'loading') {
-          initSliders();
+          renderLocalProposals();
+          renderComparison();
         }
 
-        // Reveal animations
+        document.addEventListener('DOMContentLoaded', initPage);
+        if (document.readyState !== 'loading') initPage();
+
+        // ── Reveal animations ─────────────────────────────────
         (function() {
           var observer = new IntersectionObserver(function(entries) {
             entries.forEach(function(e) {
@@ -447,6 +611,14 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           }, { threshold: 0.1 });
           document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
         })();
+      `}} />
+
+      {/* ── Animation keyframes ────────────────────────────── */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
       `}} />
     </main>
   )

@@ -29,9 +29,9 @@ export const Navbar: FC<NavbarProps> = ({ lang }) => {
 
         {/* Right: Actions */}
         <div class="navbar-actions">
-          <a href={`?lang=${otherLang}`} class="lang-toggle" id="langToggle">
+          <button class="lang-toggle" id="langToggle" onclick={`switchLang('${otherLang}')`}>
             {langLabel}
-          </a>
+          </button>
           <button class="navbar-btn" onclick="window.open('https://microconnect.com','_blank')">
             <i class="fas fa-external-link-alt" style="font-size:11px"></i>
             <span>{t(TEXT.nav.backToMain, lang)}</span>
@@ -39,18 +39,22 @@ export const Navbar: FC<NavbarProps> = ({ lang }) => {
         </div>
       </div>
 
-      {/* Navbar scroll effect script */}
+      {/* Navbar scroll effect + Language switch script */}
       <script dangerouslySetInnerHTML={{__html: `
         (function() {
+          // Scroll effect
           var navbar = document.getElementById('navbar');
           window.addEventListener('scroll', function() {
-            if (window.scrollY > 10) {
-              navbar.classList.add('scrolled');
-            } else {
-              navbar.classList.remove('scrolled');
-            }
+            navbar.classList.toggle('scrolled', window.scrollY > 10);
           });
         })();
+
+        // Language switch: preserve current path, only change lang param
+        function switchLang(newLang) {
+          var url = new URL(window.location.href);
+          url.searchParams.set('lang', newLang);
+          window.location.href = url.toString();
+        }
       `}} />
     </nav>
   )

@@ -8,6 +8,7 @@ export const renderer = jsxRenderer(({ children }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>条款通 Terms Connect — Micro Connect 滴灌通</title>
         <meta name="description" content="三联动滑块 · 投融资双方实时磋商 · RBF 条款达成" />
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>⚖️</text></svg>" />
 
         {/* Google Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

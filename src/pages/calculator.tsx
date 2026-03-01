@@ -76,6 +76,29 @@ export const CalculatorPage: FC<CalculatorPageProps> = ({ lang }) => {
       {/* ── Calculator Script ──────────────────────────────── */}
       <script dangerouslySetInnerHTML={{__html: `
         var LANG = '${lang}';
+        var CALC_COMPARE_KEY = 'termsconnect_calc_compare';
+        var CALC_PARAMS_KEY = 'termsconnect_calc_params';
+
+        // localStorage helpers
+        function lsGet(key, fallback) {
+          try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+          catch(e) { return fallback; }
+        }
+        function lsSet(key, val) {
+          try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+        }
+
+        // Restore last params
+        (function() {
+          var saved = lsGet(CALC_PARAMS_KEY, null);
+          if (saved) {
+            if (saved.pcf) document.getElementById('paramPcf').value = saved.pcf;
+            if (saved.yito) document.getElementById('paramYito').value = saved.yito;
+            if (saved.maxAmount) document.getElementById('paramMaxAmount').value = saved.maxAmount;
+            if (saved.maxRatio) document.getElementById('paramMaxRatio').value = saved.maxRatio;
+            if (saved.maxTerm) document.getElementById('paramMaxTerm').value = saved.maxTerm;
+          }
+        })();
 
         function startCalculator() {
           var pcf = parseFloat(document.getElementById('paramPcf').value) || 85;
@@ -105,9 +128,16 @@ export const CalculatorPage: FC<CalculatorPageProps> = ({ lang }) => {
           document.getElementById('calcSliderArea').style.display = 'block';
           document.getElementById('paramForm').style.display = 'none';
 
+          // Save params to localStorage
+          lsSet(CALC_PARAMS_KEY, { pcf: pcf, yito: yito, maxAmount: maxAmount, maxRatio: maxRatio, maxTerm: maxTerm });
+
+          // Load comparison plans from localStorage
+          window.comparisonPlans = lsGet(CALC_COMPARE_KEY, []);
+
           // Init sliders
           initSliders();
           updateCalculations();
+          renderComparison();
         }
 
         function resetCalculator() {
@@ -288,12 +318,14 @@ export const CalculatorPage: FC<CalculatorPageProps> = ({ lang }) => {
           };
 
           window.comparisonPlans.push(plan);
+          lsSet(CALC_COMPARE_KEY, window.comparisonPlans);
           renderComparison();
           showToast(LANG === 'zh' ? '方案已保存到对比' : 'Plan saved to comparison', 'info');
         }
 
         function clearComparison() {
           window.comparisonPlans = [];
+          lsSet(CALC_COMPARE_KEY, []);
           renderComparison();
         }
 
