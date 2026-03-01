@@ -1241,19 +1241,19 @@ input[type="number"] { -moz-appearance: textfield; }
   transition: opacity 0.35s var(--ease-smooth);
 }
 .auth-overlay-bg {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 0;
   /* Reinforced dark teal aurora background */
   background: linear-gradient(160deg, #051a18 0%, #0a2e2a 25%, #103d37 50%, #0a2e2a 75%, #051a18 100%);
 }
 .auth-overlay-bg::before {
   content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
   background:
     radial-gradient(ellipse 600px 400px at 15% 20%, rgba(46,196,182,0.15) 0%, transparent 70%),
     radial-gradient(ellipse 500px 350px at 80% 30%, rgba(61,216,202,0.12) 0%, transparent 70%),
@@ -1267,8 +1267,8 @@ input[type="number"] { -moz-appearance: textfield; }
 /* Floating particles on overlay */
 .auth-overlay-bg::after {
   content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
   background-image:
     radial-gradient(2px 2px at 12% 25%, rgba(46,196,182,0.4) 0%, transparent 100%),
     radial-gradient(2px 2px at 38% 60%, rgba(61,216,202,0.3) 0%, transparent 100%),

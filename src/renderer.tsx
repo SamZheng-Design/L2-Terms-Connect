@@ -45,7 +45,7 @@ export const renderer = jsxRenderer(({ children }) => {
 
         {/* ═══ V33 Auth Modal Overlay ═══ */}
         <div id="authOverlay" class="auth-overlay" style="display:none">
-          <div class="auth-overlay-bg cyber-bg particles-bg"></div>
+          <div class="auth-overlay-bg"></div>
           <div class="auth-overlay-center">
             <div class="auth-card animate-scale-in">
               {/* Logo Area */}
