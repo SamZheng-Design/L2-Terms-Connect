@@ -1235,6 +1235,9 @@ input[type="number"] { -moz-appearance: textfield; }
   right: 0;
   bottom: 0;
   z-index: 9999;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   transition: opacity 0.35s var(--ease-smooth);
 }
 .auth-overlay-bg {
@@ -1281,10 +1284,18 @@ input[type="number"] { -moz-appearance: textfield; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  overflow-y: auto;
+  min-height: 100%;
+  padding: 24px 20px 40px;
+}
+/* Use margin:auto trick to center card vertically
+   when content is short, but allow scrolling when tall */
+.auth-overlay-center > .auth-card {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+.auth-overlay-center > .auth-page-footer {
+  margin-top: 0;
+  flex-shrink: 0;
 }
 /* Scale-in animation for card entrance */
 @keyframes scaleIn {

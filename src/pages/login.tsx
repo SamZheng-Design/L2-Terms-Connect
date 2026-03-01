@@ -7,9 +7,9 @@ interface LoginPageProps {
 
 export const LoginPage: FC<LoginPageProps> = ({ lang }) => {
   return (
-    <div class="page active flex-col min-h-screen cyber-bg particles-bg" style="display:flex">
-      <div class="flex-1 flex items-center justify-center p-4 relative" style="z-index:10">
-        <div class="auth-card animate-scale-in">
+    <div class="page active flex-col min-h-screen cyber-bg particles-bg" style="display:flex; overflow-y:auto; -webkit-overflow-scrolling:touch">
+      <div class="flex-1 flex flex-col items-center p-4 relative" style="z-index:10">
+        <div class="auth-card animate-scale-in" style="margin-top:auto; margin-bottom:auto">
           {/* ── Logo Area ── */}
           <div class="auth-logo-section">
             {/* Dual-circle overlapping logo (V33) */}
