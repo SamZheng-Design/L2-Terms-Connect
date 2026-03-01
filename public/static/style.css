@@ -839,6 +839,56 @@ body {
   border-left: 3px solid rgba(93, 196, 179, 0.3);
 }
 
+/* Timeline per-proposal actions */
+.tl-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.04);
+  transition: opacity 0.2s ease;
+}
+.tl-btn {
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+.tl-btn:hover { border-color: #d1d5db; background: #f9fafb; }
+.tl-btn-accept:hover { border-color: var(--color-success); color: var(--color-success); background: rgba(16,185,129,0.04); }
+.tl-btn-reject:hover { border-color: var(--color-error); color: var(--color-error); background: rgba(239,68,68,0.04); }
+.tl-btn-counter:hover { border-color: var(--terms-dark); color: var(--terms-dark); background: var(--terms-light); }
+
+/* Timeline status badges on proposals */
+.tl-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+}
+.tl-status-agreed {
+  background: rgba(16,185,129,0.1);
+  color: #059669;
+}
+.tl-status-rejected {
+  background: rgba(239,68,68,0.1);
+  color: #dc2626;
+}
+
+@media (max-width: 480px) {
+  .tl-actions { flex-wrap: wrap; }
+  .tl-btn { font-size: 11px; padding: 4px 8px; }
+}
+
 /* ========== 13. Hero Section ========== */
 .hero {
   padding-top: 96px;

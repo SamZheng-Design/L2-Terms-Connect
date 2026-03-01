@@ -112,14 +112,6 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           <i class="fas fa-paper-plane"></i>
           {t(TEXT.actions.submitProposal, lang)}
         </button>
-        <button class="btn btn-success" onclick="acceptTerms()">
-          <i class="fas fa-check"></i>
-          {t(TEXT.actions.acceptTerms, lang)}
-        </button>
-        <button class="btn btn-danger" onclick="rejectTerms()">
-          <i class="fas fa-times"></i>
-          {t(TEXT.actions.reject, lang)}
-        </button>
         <button class="btn btn-ghost" onclick="openInviteModal()" style="margin-left:auto">
           <i class="fas fa-user-plus"></i>
           {lang === 'zh' ? '邀请协商方' : 'Invite'}
@@ -211,8 +203,9 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
               ? t(TEXT.timeline.investorRole, lang)
               : t(TEXT.timeline.borrowerRole, lang)
             const timeStr = p.createdAt.replace('T', ' ').slice(0, 16)
+            const proposalId = p.id || `server-${idx}`
             return (
-              <div class="timeline-item">
+              <div class="timeline-item" id={`tl-${proposalId}`}>
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
                   <div class="timeline-header">
@@ -221,6 +214,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
                     </span>
                     <span class="timeline-role">· {roleLabel}</span>
                     <span class="timeline-time">{timeStr}</span>
+                    <span class="tl-status-badge" id={`status-${proposalId}`}></span>
                   </div>
                   <div class="timeline-data">
                     <span>¥{p.financingAmount}{lang === 'zh' ? '万' : '0K'}</span>
@@ -231,6 +225,17 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
                   {p.note && (
                     <div class="timeline-note">"{p.note}"</div>
                   )}
+                  <div class="tl-actions" id={`actions-${proposalId}`}>
+                    <button class="tl-btn tl-btn-accept" onclick={`acceptProposal('${proposalId}', ${roundNum})`}>
+                      <i class="fas fa-check"></i> {lang === 'zh' ? '接受此方案' : 'Accept'}
+                    </button>
+                    <button class="tl-btn tl-btn-reject" onclick={`rejectProposal('${proposalId}', ${roundNum})`}>
+                      <i class="fas fa-times"></i> {lang === 'zh' ? '拒绝' : 'Reject'}
+                    </button>
+                    <button class="tl-btn tl-btn-counter" onclick={`counterProposal('${proposalId}', ${roundNum}, ${p.financingAmount}, ${p.revenueShareRatio}, ${p.cooperationTerm})`}>
+                      <i class="fas fa-reply"></i> {lang === 'zh' ? '反提案' : 'Counter'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )
@@ -349,7 +354,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
             var roundPre = LANG === 'zh' ? '第' : 'Round ';
             var roundSuf = LANG === 'zh' ? '轮' : '';
 
-            fragment += '<div class="timeline-item">'
+            fragment += '<div class="timeline-item" id="tl-' + p.id + '">'
               + '<div class="timeline-dot" style="background:var(--terms-dark);border-color:var(--terms-dark)"></div>'
               + '<div class="timeline-content" style="border:1.5px solid rgba(93,196,179,0.15)">'
               + '<div class="timeline-header">'
@@ -357,6 +362,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
               + '<span class="timeline-role">· ' + roleLabel + '</span>'
               + '<span class="timeline-time">' + timeStr + '</span>'
               + '<span style="margin-left:8px;font-size:10px;padding:2px 6px;border-radius:999px;background:var(--terms-light);color:var(--terms-dark)">NEW</span>'
+              + '<span class="tl-status-badge" id="status-' + p.id + '"></span>'
               + '</div>'
               + '<div class="timeline-data">'
               + '<span>¥' + p.financingAmount + unit + '</span>'
@@ -365,6 +371,14 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
               + '<span>IRR ' + p.irr + '%</span>'
               + '</div>'
               + (p.note ? '<div class="timeline-note">"' + p.note + '"</div>' : '')
+              + '<div class="tl-actions" id="actions-' + p.id + '" data-pid="' + p.id + '" data-round="' + roundNum + '" data-amt="' + p.financingAmount + '" data-ratio="' + p.revenueShareRatio + '" data-term="' + p.cooperationTerm + '">'
+              + '<button class="tl-btn tl-btn-accept" onclick="tlAction(this,1)">'
+              + '<i class="fas fa-check"></i> ' + (LANG==='zh'?'接受此方案':'Accept') + '</button>'
+              + '<button class="tl-btn tl-btn-reject" onclick="tlAction(this,2)">'
+              + '<i class="fas fa-times"></i> ' + (LANG==='zh'?'拒绝':'Reject') + '</button>'
+              + '<button class="tl-btn tl-btn-counter" onclick="tlAction(this,3)">'
+              + '<i class="fas fa-reply"></i> ' + (LANG==='zh'?'反提案':'Counter') + '</button>'
+              + '</div>'
               + '</div></div>';
           });
 
@@ -434,7 +448,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           var roundPre = LANG === 'zh' ? '第' : 'Round ';
           var roundSuf = LANG === 'zh' ? '轮' : '';
 
-          var html = '<div class="timeline-item" style="animation:fadeInUp 0.4s ease">'
+          var html = '<div class="timeline-item" id="tl-' + proposal.id + '" style="animation:fadeInUp 0.4s ease">'
             + '<div class="timeline-dot" style="background:var(--terms-dark);border-color:var(--terms-dark)"></div>'
             + '<div class="timeline-content" style="border:1.5px solid rgba(93,196,179,0.15)">'
             + '<div class="timeline-header">'
@@ -442,6 +456,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
             + '<span class="timeline-role">· ' + roleLabel + '</span>'
             + '<span class="timeline-time">' + timeStr + '</span>'
             + '<span style="margin-left:8px;font-size:10px;padding:2px 6px;border-radius:999px;background:var(--terms-light);color:var(--terms-dark)">NEW</span>'
+            + '<span class="tl-status-badge" id="status-' + proposal.id + '"></span>'
             + '</div>'
             + '<div class="timeline-data">'
             + '<span>¥' + proposal.financingAmount + unit + '</span>'
@@ -450,6 +465,14 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
             + '<span>IRR ' + proposal.irr + '%</span>'
             + '</div>'
             + (proposal.note ? '<div class="timeline-note">"' + proposal.note + '"</div>' : '')
+            + '<div class="tl-actions" id="actions-' + proposal.id + '" data-pid="' + proposal.id + '" data-round="' + roundNum + '" data-amt="' + proposal.financingAmount + '" data-ratio="' + proposal.revenueShareRatio + '" data-term="' + proposal.cooperationTerm + '">'
+            + '<button class="tl-btn tl-btn-accept" onclick="tlAction(this,1)">'
+            + '<i class="fas fa-check"></i> ' + (LANG==='zh'?'接受此方案':'Accept') + '</button>'
+            + '<button class="tl-btn tl-btn-reject" onclick="tlAction(this,2)">'
+            + '<i class="fas fa-times"></i> ' + (LANG==='zh'?'拒绝':'Reject') + '</button>'
+            + '<button class="tl-btn tl-btn-counter" onclick="tlAction(this,3)">'
+            + '<i class="fas fa-reply"></i> ' + (LANG==='zh'?'反提案':'Counter') + '</button>'
+            + '</div>'
             + '</div></div>';
 
           container.insertAdjacentHTML('afterbegin', html);
@@ -458,17 +481,100 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
         }
 
         function acceptTerms() {
-          localStatus = 'agreed';
-          lsSet(STATUS_KEY, 'agreed');
-          updateStatusUI('agreed');
-          showToast(LANG === 'zh' ? '条款已达成（Demo）' : 'Terms Agreed (Demo)', 'success');
+          showToast(LANG === 'zh' ? '请在时间线中选择具体提案进行接受/拒绝' : 'Please accept/reject a specific proposal in the timeline', 'info');
         }
 
         function rejectTerms() {
-          localStatus = 'rejected';
-          lsSet(STATUS_KEY, 'rejected');
-          updateStatusUI('rejected');
-          showToast(LANG === 'zh' ? '条款已拒绝' : 'Terms Rejected', 'error');
+          showToast(LANG === 'zh' ? '请在时间线中选择具体提案进行接受/拒绝' : 'Please accept/reject a specific proposal in the timeline', 'info');
+        }
+
+        // ── Per-proposal accept/reject/counter ─────────────────
+        var proposalDecisions = lsGet('termsconnect_decisions_' + NEGOTIATION_ID, {});
+
+        // Dispatcher: reads data-* from parent .tl-actions div
+        function tlAction(btn, action) {
+          var wrap = btn.closest('.tl-actions');
+          var pid = wrap.dataset.pid;
+          var round = parseInt(wrap.dataset.round);
+          if (action === 1) acceptProposal(pid, round);
+          else if (action === 2) rejectProposal(pid, round);
+          else if (action === 3) counterProposal(pid, round, parseFloat(wrap.dataset.amt), parseFloat(wrap.dataset.ratio), parseInt(wrap.dataset.term));
+        }
+
+        function acceptProposal(proposalId, roundNum) {
+          var roundLabel = (LANG==='zh'?'第':'Round ') + roundNum + (LANG==='zh'?'轮':'');
+          if (!confirm(LANG==='zh'
+            ? '确认接受 ' + roundLabel + ' 的方案？\\n\\n接受后该方案将标记为已达成。'
+            : 'Accept ' + roundLabel + ' proposal?\\n\\nThis will mark it as agreed.')) return;
+
+          proposalDecisions[proposalId] = { status: 'agreed', decidedAt: new Date().toISOString(), decidedBy: currentPerspective };
+          lsSet('termsconnect_decisions_' + NEGOTIATION_ID, proposalDecisions);
+          renderProposalStatus(proposalId, 'agreed', roundNum);
+          showToast(LANG==='zh' ? roundLabel + ' 方案已接受' : roundLabel + ' accepted', 'success');
+        }
+
+        function rejectProposal(proposalId, roundNum) {
+          var roundLabel = (LANG==='zh'?'第':'Round ') + roundNum + (LANG==='zh'?'轮':'');
+          if (!confirm(LANG==='zh'
+            ? '确认拒绝 ' + roundLabel + ' 的方案？' : 'Reject ' + roundLabel + ' proposal?')) return;
+
+          proposalDecisions[proposalId] = { status: 'rejected', decidedAt: new Date().toISOString(), decidedBy: currentPerspective };
+          lsSet('termsconnect_decisions_' + NEGOTIATION_ID, proposalDecisions);
+          renderProposalStatus(proposalId, 'rejected', roundNum);
+          showToast(LANG==='zh' ? roundLabel + ' 方案已拒绝' : roundLabel + ' rejected', 'error');
+        }
+
+        function counterProposal(proposalId, roundNum, amount, ratio, term) {
+          // Load the proposal's values into sliders for counter-offer
+          window.currentValues.financingAmount = amount;
+          window.currentValues.revenueShareRatio = ratio;
+          window.currentValues.cooperationTerm = term;
+          renderSliders();
+          updateCalculations();
+          // Scroll to slider area and focus the note
+          document.getElementById('negotiationNote').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(function() { document.getElementById('negotiationNote').focus(); }, 400);
+          var roundLabel = (LANG==='zh'?'第':'Round ') + roundNum + (LANG==='zh'?'轮':'');
+          document.getElementById('negotiationNote').placeholder =
+            LANG==='zh' ? '针对' + roundLabel + '的反提案说明…' : 'Counter to ' + roundLabel + '…';
+          showToast(LANG==='zh' ? '已加载' + roundLabel + '方案参数，请调整后提交反提案' : 'Loaded ' + roundLabel + ' values. Adjust and submit.', 'info');
+        }
+
+        function renderProposalStatus(proposalId, status, roundNum) {
+          // Update status badge
+          var badge = document.getElementById('status-' + proposalId);
+          if (badge) {
+            if (status === 'agreed') {
+              badge.innerHTML = '<i class="fas fa-check-circle"></i> ' + (LANG==='zh'?'已接受':'Accepted');
+              badge.className = 'tl-status-badge tl-status-agreed';
+            } else if (status === 'rejected') {
+              badge.innerHTML = '<i class="fas fa-times-circle"></i> ' + (LANG==='zh'?'已拒绝':'Rejected');
+              badge.className = 'tl-status-badge tl-status-rejected';
+            }
+          }
+          // Hide action buttons
+          var actions = document.getElementById('actions-' + proposalId);
+          if (actions) {
+            actions.style.opacity = '0';
+            setTimeout(function() { actions.style.display = 'none'; }, 200);
+          }
+          // Update timeline dot
+          var item = document.getElementById('tl-' + proposalId);
+          if (item) {
+            var dot = item.querySelector('.timeline-dot');
+            if (dot) {
+              dot.style.background = status === 'agreed' ? 'var(--color-success)' : 'var(--color-error)';
+              dot.style.borderColor = status === 'agreed' ? 'var(--color-success)' : 'var(--color-error)';
+            }
+          }
+        }
+
+        // Restore persisted decisions on page load
+        function restoreDecisions() {
+          Object.keys(proposalDecisions).forEach(function(pid) {
+            var d = proposalDecisions[pid];
+            renderProposalStatus(pid, d.status, 0);
+          });
         }
 
         // ── Slider Engine ─────────────────────────────────────
@@ -672,6 +778,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
           initSliders();
           renderLocalProposals();
           renderComparison();
+          restoreDecisions();
           // Pre-fill inviter name from logged-in user
           try {
             var user = JSON.parse(localStorage.getItem('tc_user'));
