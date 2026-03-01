@@ -1225,6 +1225,102 @@ input[type="number"] { -moz-appearance: textfield; }
 .back-btn { transition: all 0.2s; }
 .back-btn:hover { transform: translateX(-4px); background: #F0FDFA; }
 
+/* ========== 24.5. Auth Overlay - V33 Full-Screen Modal ========== */
+
+/* Full-screen overlay container */
+.auth-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  transition: opacity 0.35s var(--ease-smooth);
+}
+.auth-overlay-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  /* Reinforced dark teal aurora background */
+  background: linear-gradient(160deg, #051a18 0%, #0a2e2a 25%, #103d37 50%, #0a2e2a 75%, #051a18 100%);
+}
+.auth-overlay-bg::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(ellipse 600px 400px at 15% 20%, rgba(46,196,182,0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 350px at 80% 30%, rgba(61,216,202,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 300px at 50% 70%, rgba(40,166,150,0.1) 0%, transparent 70%);
+  animation: auroraShift 12s ease-in-out infinite alternate;
+}
+@keyframes auroraShift {
+  0% { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.05); }
+}
+/* Floating particles on overlay */
+.auth-overlay-bg::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    radial-gradient(2px 2px at 12% 25%, rgba(46,196,182,0.4) 0%, transparent 100%),
+    radial-gradient(2px 2px at 38% 60%, rgba(61,216,202,0.3) 0%, transparent 100%),
+    radial-gradient(2px 2px at 55% 18%, rgba(93,196,179,0.35) 0%, transparent 100%),
+    radial-gradient(2px 2px at 72% 45%, rgba(46,196,182,0.25) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 87% 75%, rgba(61,216,202,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 25% 82%, rgba(40,166,150,0.3) 0%, transparent 100%);
+  animation: particleFloat 30s infinite linear;
+}
+.auth-overlay-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  overflow-y: auto;
+}
+/* Scale-in animation for card entrance */
+@keyframes scaleIn {
+  0% { opacity: 0; transform: scale(0.92) translateY(16px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+/* Auth overlay toast notifications */
+.toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  min-width: 280px;
+  max-width: 420px;
+  padding: 14px 20px;
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(100px);
+  transition: all 0.4s var(--ease-apple);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+.toast-success { border-left: 4px solid #10b981; color: #065f46; }
+.toast-error { border-left: 4px solid #ef4444; color: #991b1b; }
+.toast-info { border-left: 4px solid #3b82f6; color: #1e40af; }
+.toast-warning { border-left: 4px solid #f59e0b; color: #92400e; }
+
 /* ========== 25. Auth Page - V33 White Card on Dark Aurora ========== */
 
 /* Auth Card: white, centered, dramatic shadow */

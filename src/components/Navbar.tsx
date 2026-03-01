@@ -70,7 +70,7 @@ export const Navbar: FC<NavbarProps> = ({ lang }) => {
           window.location.href = url.toString();
         }
 
-        // User action: go to login or show user menu
+        // User action: show auth overlay or logout
         function handleUserAction(lang) {
           var user = null;
           try { user = JSON.parse(localStorage.getItem('tc_user')); } catch(e) {}
@@ -79,10 +79,27 @@ export const Navbar: FC<NavbarProps> = ({ lang }) => {
             if (confirm(lang === 'zh' ? '确认登出？' : 'Confirm logout?')) {
               localStorage.removeItem('tc_user');
               localStorage.removeItem('tc_token');
-              window.location.href = '/login?lang=' + lang;
+              // Update nav button back to login state
+              var label = document.getElementById('navUserLabel');
+              var icon = document.querySelector('#navUserBtn i');
+              if (label) label.textContent = lang === 'zh' ? '登录' : 'Login';
+              if (icon) icon.className = 'fas fa-user-circle';
+              // Show auth overlay
+              var overlay = document.getElementById('authOverlay');
+              if (overlay) {
+                overlay.style.display = '';
+                overlay.style.opacity = '1';
+                document.body.style.overflow = 'hidden';
+              }
             }
           } else {
-            window.location.href = '/login?lang=' + lang;
+            // Not logged in - show auth overlay (priority modal)
+            var overlay = document.getElementById('authOverlay');
+            if (overlay) {
+              overlay.style.display = '';
+              overlay.style.opacity = '1';
+              document.body.style.overflow = 'hidden';
+            }
           }
         }
       `}} />
