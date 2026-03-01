@@ -10,7 +10,7 @@ export const SliderPanel: FC<SliderPanelProps> = ({ lang, mode }) => {
   return (
     <div>
       {/* ── Three-Linked Slider Area ───────────────────────── */}
-      <div class="card-static" style="padding:32px;margin-bottom:24px;background:linear-gradient(135deg,rgba(237,233,254,0.3),rgba(255,255,255,0.95))">
+      <div class="card-static" style="padding:32px;margin-bottom:24px;background:linear-gradient(135deg,rgba(240,253,250,0.3),rgba(255,255,255,0.95))">
         <div style="text-align:center;margin-bottom:24px">
           <span style="font-size:13px;color:var(--text-tertiary)">
             {lang === 'zh' ? '投资方' : 'Investor'}
@@ -120,7 +120,7 @@ export const SliderPanel: FC<SliderPanelProps> = ({ lang, mode }) => {
             <div class="metric-value">¥<span id="metric-monthly">0</span></div>
             <div class="metric-unit">{t(TEXT.metrics.wan, lang)}/{lang === 'zh' ? '月' : 'Mo'}</div>
           </div>
-          <div class="metric-card" style="background:linear-gradient(135deg,var(--terms-light),rgba(139,92,246,0.08))">
+          <div class="metric-card" style="background:linear-gradient(135deg,var(--terms-light),rgba(93,196,179,0.08))">
             <div class="metric-label" style="color:var(--terms-dark)">{t(TEXT.metrics.irr, lang)}</div>
             <div class="metric-value" style="color:var(--terms-dark)"><span id="metric-irr">0</span>%</div>
             <div class="metric-unit" style="color:var(--terms-dark)">{lang === 'zh' ? '内部收益率' : 'Internal Rate'}</div>

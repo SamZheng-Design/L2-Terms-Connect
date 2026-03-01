@@ -224,7 +224,7 @@ export const industryIcons: Record<string, string> = {
 
 // ── Status Config ─────────────────────────────────────────────
 export const statusConfig: Record<string, { icon: string; color: string; bg: string }> = {
-  negotiating: { icon: '⏳', color: '#8B5CF6', bg: '#EDE9FE' },
+  negotiating: { icon: '⏳', color: '#5DC4B3', bg: '#F0FDFA' },
   agreed: { icon: '✓', color: '#34c759', bg: '#dcfce7' },
   rejected: { icon: '✕', color: '#ff375f', bg: '#fee2e2' },
   expired: { icon: '⏰', color: '#86868b', bg: '#f5f5f7' },

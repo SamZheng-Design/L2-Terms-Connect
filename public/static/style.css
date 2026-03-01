@@ -14,9 +14,9 @@
   --logo-bright2: #3DD8CA;
   --logo-dark: #28A696;
 
-  /* Terms Connect Exclusive */
-  --terms-light: #EDE9FE;
-  --terms-dark: #8B5CF6;
+  /* Terms Connect Exclusive (Teal) */
+  --terms-light: #F0FDFA;
+  --terms-dark: #5DC4B3;
 
   /* Semantic Colors */
   --info: #32ade6;
@@ -372,9 +372,9 @@ body {
 }
 
 .btn-primary:hover {
-  background: #7c3aed;
+  background: #3D8F83;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(139,92,246,0.3);
+  box-shadow: 0 4px 16px rgba(93,196,179,0.3);
 }
 
 .btn-secondary {
@@ -552,7 +552,7 @@ body {
 
 .slider-thumb:hover {
   transform: translateY(-50%) scale(1.15);
-  box-shadow: 0 4px 12px rgba(139,92,246,0.3);
+  box-shadow: 0 4px 12px rgba(93,196,179,0.3);
 }
 
 .slider-thumb:active {
@@ -743,8 +743,8 @@ body {
 
 /* ── Formula Card ──────────────────────────────────────────── */
 .formula-card {
-  background: linear-gradient(135deg, rgba(237,233,254,0.5), rgba(139,92,246,0.08));
-  border: 1px solid rgba(139,92,246,0.12);
+  background: linear-gradient(135deg, rgba(240,253,250,0.5), rgba(93,196,179,0.08));
+  border: 1px solid rgba(93,196,179,0.12);
   border-radius: var(--radius-xl);
   padding: 28px 32px;
   text-align: center;
@@ -848,7 +848,7 @@ body {
   padding: 12px 16px;
   font-weight: 600;
   text-align: center;
-  border-bottom: 2px solid rgba(139,92,246,0.15);
+  border-bottom: 2px solid rgba(93,196,179,0.15);
 }
 
 .compare-table thead th:first-child {
@@ -874,7 +874,7 @@ body {
 }
 
 .compare-table tbody tr:hover {
-  background: rgba(139,92,246,0.03);
+  background: rgba(93,196,179,0.03);
 }
 
 /* ── Input Fields ──────────────────────────────────────────── */
@@ -893,7 +893,7 @@ body {
 
 .input-field:focus {
   border-color: var(--terms-dark);
-  box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+  box-shadow: 0 0 0 3px rgba(93,196,179,0.1);
 }
 
 .input-field::placeholder {
@@ -1033,8 +1033,8 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.2); }
-  50% { box-shadow: 0 0 0 8px rgba(139,92,246,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(93,196,179,0.2); }
+  50% { box-shadow: 0 0 0 8px rgba(93,196,179,0); }
 }
 
 /* ── Metric value transitions ──────────────────────────────── */
@@ -1078,7 +1078,7 @@ input[type="number"] {
 
 /* ── Selection color ───────────────────────────────────────── */
 ::selection {
-  background: rgba(139,92,246,0.15);
+  background: rgba(93,196,179,0.15);
   color: var(--text-primary);
 }
 

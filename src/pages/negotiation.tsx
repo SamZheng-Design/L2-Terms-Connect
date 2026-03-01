@@ -276,7 +276,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
 
             fragment += '<div class="timeline-item">'
               + '<div class="timeline-dot" style="background:var(--terms-dark);border-color:var(--terms-dark)"></div>'
-              + '<div class="timeline-content" style="border:1.5px solid rgba(139,92,246,0.15)">'
+              + '<div class="timeline-content" style="border:1.5px solid rgba(93,196,179,0.15)">'
               + '<div class="timeline-header">'
               + '<span class="timeline-round">📌 ' + roundPre + roundNum + roundSuf + '</span>'
               + '<span class="timeline-role">· ' + roleLabel + '</span>'
@@ -361,7 +361,7 @@ export const NegotiationPage: FC<NegotiationPageProps> = ({ lang, negotiationId 
 
           var html = '<div class="timeline-item" style="animation:fadeInUp 0.4s ease">'
             + '<div class="timeline-dot" style="background:var(--terms-dark);border-color:var(--terms-dark)"></div>'
-            + '<div class="timeline-content" style="border:1.5px solid rgba(139,92,246,0.15)">'
+            + '<div class="timeline-content" style="border:1.5px solid rgba(93,196,179,0.15)">'
             + '<div class="timeline-header">'
             + '<span class="timeline-round">📌 ' + roundPre + roundNum + roundSuf + '</span>'
             + '<span class="timeline-role">· ' + roleLabel + '</span>'
