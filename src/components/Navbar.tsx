@@ -16,7 +16,7 @@ export const Navbar: FC<NavbarProps> = ({ lang }) => {
         {/* Left: Brand */}
         <a href={`/?lang=${lang}`} class="navbar-brand">
           <div class="navbar-brand-logo">
-            <span>MICRO</span> CONNECT <span style="font-size:12px;opacity:0.6;margin-left:4px">滴灌通</span>
+            MICRO CONNECT <span style="font-size:12px;opacity:0.6;margin-left:4px">滴灌通</span>
           </div>
           <div class="navbar-brand-divider"></div>
           <div class="navbar-product">

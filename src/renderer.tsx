@@ -25,7 +25,50 @@ export const renderer = jsxRenderer(({ children }) => {
         <link href="/static/style.css" rel="stylesheet" />
       </head>
       <body class="bg-page text-primary antialiased">
+        {/* ═══ V33 Loading Screen ═══ */}
+        <div id="app-loading">
+          <div class="loading-logo">
+            <div class="loading-logo-ring loading-logo-ring-outer"></div>
+            <div class="loading-logo-ring loading-logo-ring-inner"></div>
+            <div class="loading-logo-center">⚖️</div>
+          </div>
+          <div class="loading-text">条款通 Terms Connect</div>
+          <div class="loading-sub">智能条款协商平台</div>
+          <div class="loading-progress">
+            <div class="loading-progress-bar"></div>
+          </div>
+          <div class="loading-powered">POWERED BY MICRO CONNECT GROUP</div>
+        </div>
+
+        {/* ═══ Main Content ═══ */}
         {children}
+
+        {/* ═══ Loading Screen Dismiss Script ═══ */}
+        <script dangerouslySetInnerHTML={{__html: `
+          (function() {
+            var loading = document.getElementById('app-loading');
+            if (loading) {
+              // Wait for page to be fully loaded then fade out
+              window.addEventListener('load', function() {
+                setTimeout(function() {
+                  loading.classList.add('fade-out');
+                  setTimeout(function() {
+                    loading.style.display = 'none';
+                  }, 600);
+                }, 1200);
+              });
+              // Fallback: force hide after 3 seconds
+              setTimeout(function() {
+                if (loading && !loading.classList.contains('fade-out')) {
+                  loading.classList.add('fade-out');
+                  setTimeout(function() {
+                    loading.style.display = 'none';
+                  }, 600);
+                }
+              }, 3000);
+            }
+          })();
+        `}} />
       </body>
     </html>
   )
