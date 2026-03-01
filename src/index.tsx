@@ -5,11 +5,20 @@ import { Footer } from './components/Footer'
 import { HomePage } from './pages/home'
 import { NegotiationPage } from './pages/negotiation'
 import { CalculatorPage } from './pages/calculator'
+import { LoginPage } from './pages/login'
 import { apiRoutes } from './api'
 
 const app = new Hono()
 
 app.use(renderer)
+
+// ── Login Page ──────────────────────────────────────────────
+app.get('/login', (c) => {
+  const lang = (c.req.query('lang') || 'zh') as 'zh' | 'en'
+  return c.render(
+    <LoginPage lang={lang} />
+  )
+})
 
 // ── Page Routes ──────────────────────────────────────────────
 app.get('/', (c) => {

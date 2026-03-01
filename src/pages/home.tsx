@@ -11,11 +11,25 @@ export const HomePage: FC<HomePageProps> = ({ lang }) => {
     <main style="max-width:1200px;margin:0 auto;padding:0 24px">
       {/* ── Hero ───────────────────────────────────────────── */}
       <section class="hero reveal">
-        <img
-          src="https://www.genspark.ai/api/files/s/xnam27pA"
-          alt="Terms Connect Logo"
-          class="hero-logo"
-        />
+        <div class="hero-logo">
+          <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" width="60" height="60">
+            <defs>
+              <linearGradient id="heroGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#5DC4B3"/>
+                <stop offset="100%" style="stop-color:#3D8F83"/>
+              </linearGradient>
+              <linearGradient id="heroGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#7DD4C7"/>
+                <stop offset="100%" style="stop-color:#5DC4B3"/>
+              </linearGradient>
+            </defs>
+            <rect width="60" height="60" rx="16" fill="url(#heroGrad1)"/>
+            <path d="M30 14L44 22V38L30 46L16 38V22L30 14Z" stroke="white" stroke-width="2" fill="none" opacity="0.7"/>
+            <path d="M30 20L38 24.5V33.5L30 38L22 33.5V24.5L30 20Z" fill="url(#heroGrad2)" opacity="0.6" stroke="white" stroke-width="1.5"/>
+            <circle cx="30" cy="29" r="5" fill="white" opacity="0.95"/>
+            <path d="M28 29L29.5 30.5L32.5 27.5" stroke="#5DC4B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
         <h1 class="hero-title">{t(TEXT.hero.title, lang)}</h1>
         <p class="hero-subtitle">{t(TEXT.hero.subtitle, lang)}</p>
         <p class="hero-metaphor">{t(TEXT.hero.metaphor, lang)}</p>

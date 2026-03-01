@@ -152,3 +152,107 @@ apiRoutes.post('/terms/initiate', async (c) => {
     redirectUrl: `/negotiation/${negotiationId}`,
   })
 })
+
+// ══════════ Auth API (V33 style) ══════════════════════════════
+
+// In-memory user/session store (production: use D1/KV)
+const userStore = new Map<string, any>()
+const sessionStore = new Map<string, any>()
+
+// Register
+apiRoutes.post('/auth/register', async (c) => {
+  const { username, email, password, displayName, defaultRole, company, title } = await c.req.json()
+  
+  if (!username || !email || !password) {
+    return c.json({ success: false, message: '请填写用户名、邮箱和密码' }, 400)
+  }
+  
+  for (const [_, user] of userStore) {
+    if (user.username === username) return c.json({ success: false, message: '用户名已被注册' }, 400)
+    if (user.email === email) return c.json({ success: false, message: '邮箱已被注册' }, 400)
+  }
+  
+  const userId = 'user_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6)
+  const now = new Date().toISOString()
+  
+  const newUser = {
+    id: userId, username, email, password,
+    phone: '', displayName: displayName || username,
+    company: company || '', title: title || '', bio: '',
+    defaultRole: defaultRole || 'both',
+    createdAt: now, updatedAt: now
+  }
+  userStore.set(userId, newUser)
+  
+  const token = 'tok_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 10)
+  const expiresAt = new Date(Date.now() + 7 * 24 * 3600000).toISOString()
+  sessionStore.set(token, { userId, token, expiresAt })
+  
+  return c.json({
+    success: true, message: '注册成功',
+    user: { id: userId, username, email, displayName: newUser.displayName, defaultRole: newUser.defaultRole },
+    token, expiresAt
+  })
+})
+
+// Login
+apiRoutes.post('/auth/login', async (c) => {
+  const { username, email, password } = await c.req.json()
+  const loginId = username || email
+  if (!loginId || !password) return c.json({ success: false, message: '请输入用户名/邮箱和密码' }, 400)
+  
+  let foundUser = null
+  for (const [_, user] of userStore) {
+    if (user.username === loginId || user.email === loginId) { foundUser = user; break }
+  }
+  
+  if (!foundUser) return c.json({ success: false, message: '用户不存在' }, 401)
+  if ((foundUser as any).password !== password) return c.json({ success: false, message: '密码错误' }, 401)
+  
+  const token = 'tok_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 10)
+  const expiresAt = new Date(Date.now() + 7 * 24 * 3600000).toISOString()
+  sessionStore.set(token, { userId: foundUser.id, token, expiresAt })
+  
+  return c.json({
+    success: true, message: '登录成功',
+    user: {
+      id: foundUser.id, username: foundUser.username, email: foundUser.email,
+      displayName: foundUser.displayName, phone: foundUser.phone,
+      company: foundUser.company, title: foundUser.title,
+      defaultRole: foundUser.defaultRole
+    },
+    token, expiresAt
+  })
+})
+
+// Logout
+apiRoutes.post('/auth/logout', async (c) => {
+  const authHeader = c.req.header('Authorization')
+  const token = authHeader?.replace('Bearer ', '')
+  if (token) sessionStore.delete(token)
+  return c.json({ success: true, message: '已登出' })
+})
+
+// Get current user
+apiRoutes.get('/auth/me', async (c) => {
+  const authHeader = c.req.header('Authorization')
+  const token = authHeader?.replace('Bearer ', '')
+  if (!token) return c.json({ success: false, message: '未登录' }, 401)
+  
+  const session = sessionStore.get(token)
+  if (!session || new Date(session.expiresAt) < new Date()) {
+    sessionStore.delete(token!)
+    return c.json({ success: false, message: '会话已过期' }, 401)
+  }
+  
+  const user = userStore.get(session.userId)
+  if (!user) return c.json({ success: false, message: '用户不存在' }, 404)
+  
+  return c.json({
+    success: true,
+    user: {
+      id: user.id, username: user.username, email: user.email,
+      displayName: user.displayName, defaultRole: user.defaultRole
+    }
+  })
+})
